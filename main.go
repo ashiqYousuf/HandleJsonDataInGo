@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 )
 
-// !MARSHALLING || SERIALIZATION
-// ?Encoding Go objects to JSON format is known as marshaling
-// ?func Marshal(v interface{}) ([]byte, error)
-// ?It accepts an empty interface. In other words, you can provide any Go data type to the function
+// func init() {
+// 	fmt.Println("Learn JSON Encoding & Decoding!")
+// }
 
 type Book struct {
 	Title  string `json:"title,"`
@@ -28,6 +28,11 @@ type Product struct {
 	Price  int    `json:"price"`
 	Seller Seller `json:"seller,omitempty"`
 }
+
+// !MARSHALLING || SERIALIZATION
+// ?Encoding Go objects to JSON format is known as marshaling
+// ?func Marshal(v interface{}) ([]byte, error)
+// ?It accepts an empty interface. In other words, you can provide any Go data type to the function
 
 func Encode(obj interface{}) (string, error) {
 	// byteData, err := json.Marshal(obj)
@@ -97,6 +102,131 @@ func EncodingExamples() {
 	fmt.Println("-----------------------------------------------------------------------------------------------------------------------")
 }
 
+// !UNMARSHALLING || DE-SERIALIZATION
+// ?converting JSON to Go objects is called Un-Marshalling
+// ?func Unmarshal(data []byte, v interface{}) error
+// ?pass a reference to store the decoded content
+
+func Decode(jsonData string, obj interface{}) error {
+	err := json.Unmarshal([]byte(jsonData), obj)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DecodingExamples() {
+	// ?Decoding or De-Serializing JSON into Object
+
+	jsonBook := `{
+		"title": "My Book",
+		"author": "Hossien",
+		"year": 2023
+	}`
+	var book Book
+	err := Decode(jsonBook, &book)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%#v\n", book)
+	fmt.Println("-----------------------------------------------------------------------------------------------------------------------")
+
+	// ?Decoding JSON to Map D.S
+	jsonInput := `{
+        "apples": 10,
+        "mangos": 20,
+        "grapes": 20
+    }`
+	fruits := map[string]int{}
+	err = Decode(jsonInput, &fruits)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(fruits)
+	fmt.Println("-----------------------------------------------------------------------------------------------------------------------")
+
+	// ?Decoding complex JSON
+	complexJsonInput := `[
+		{
+			"productId":50,
+			"name":"Writing Book",
+			"seller":{
+				"sellerId":1,
+				"name":"ABC Company",
+				"countryCode":"US"
+			},
+			"price":100
+		},
+		{
+			"productId":51,
+			"name":"Kettle",
+			"seller":{
+				"sellerId":20,
+				"name":"John Store",
+				"countryCode":"DE"
+			},
+			"price":500
+		}]
+		`
+	products := []Product{}
+	err = Decode(complexJsonInput, &products)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("%#v\n", products)
+	fmt.Println("-----------------------------------------------------------------------------------------------------------------------")
+}
+
+type Window struct {
+	Width  int `json:"width"`
+	Height int `json:"height"`
+	X      int `json:"x"`
+	Y      int `json:"y"`
+}
+
+type Config struct {
+	Timeout     float32 `json:"timeout"`
+	PluginsPath string  `json:"pluginsPath"`
+	Window      Window  `json:"window"`
+}
+
+func ReadingJsonFiles(filepath string, obj interface{}) {
+	byteData, err := os.ReadFile(filepath)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = Decode(string(byteData), obj)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func WritingJsonFiles(filepath string, obj interface{}) error {
+	strData, err := Encode(obj)
+
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(filepath, []byte(strData), 0666)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	// EncodingExamples()
+	// DecodingExamples()
+	// Reading Json Files in a struct variable
+	var c Config
+	ReadingJsonFiles("config.json", &c)
+	fmt.Printf("%#v\n", c)
+	// Writing to Json Files
+	c.PluginsPath = "usr/bin/plugins/"
+	WritingJsonFiles("config.json", c)
 }
